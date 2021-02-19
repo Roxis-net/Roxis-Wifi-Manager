@@ -1,1 +1,1 @@
-## Forked From :arrow_right: [Development Branch](https://github.com/tzapu/WiFiManager)
+## Forked From :arrow_right: [WifiManager Base](https://github.com/tzapu/WiFiManager)
