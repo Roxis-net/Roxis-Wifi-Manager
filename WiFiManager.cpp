@@ -562,7 +562,7 @@ void WiFiManager::handleWifi(boolean scan)
     if (n == 0)
     {
       DEBUG_WM(F("No networks found"));
-      page += F("No networks found. Refresh to scan again.");
+      page += F("Ağ Bulunamadı Lütfen tekrar tarayınız.");
     }
     else
     {
@@ -776,7 +776,7 @@ void WiFiManager::handleWifiSave()
   }
 
   String page = FPSTR(HTTP_HEADER);
-  page.replace("{v}", "Credentials Saved");
+  page.replace("{v}", "Ayarlar Kaydedildi");
   page += FPSTR(HTTP_SCRIPT);
   page += FPSTR(HTTP_STYLE);
   page += _customHeadElement;

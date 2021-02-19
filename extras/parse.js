@@ -10,7 +10,7 @@ const outFile = 'template.h';
 const defineRegEx = /<!-- ([A-Z_]+) -->/gm;
 console.log('parsing', inFile);
 
-fs.readFile(inFile, 'utf8', function (err,data) {
+fs.readFile(inFile, 'utf8', function (err, data) {
   if (err) {
     return console.log(err);
   }
@@ -20,7 +20,7 @@ fs.readFile(inFile, 'utf8', function (err,data) {
 
   //console.log(defines);
   var stream = fs.createWriteStream(outFile);
-  stream.once('open', function(fd) {
+  stream.once('open', function (fd) {
     for (const i in defines) {
 
       const start = defines[i];
@@ -31,7 +31,7 @@ fs.readFile(inFile, 'utf8', function (err,data) {
       console.log(constantName);
       var extractRE = new RegExp(start + '([\\s\\S]+)' + end, 'gm');
       let extractArray = extractRE.exec(data);
-      if(extractArray.length > 1) {
+      if (extractArray.length > 1) {
         let def = extractArray[1];
         //console.log(def);
         //minimise a bit
