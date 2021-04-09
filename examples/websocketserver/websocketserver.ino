@@ -189,6 +189,7 @@ void setup()
 {
   delay(5000); //BOOT WAIT
   Serial.begin(115200);
+
   testSerial.begin(9600, SWSERIAL_8N1, 2, 0, false, 95, 11);
 
   Serial.print("baud=9600");
@@ -281,24 +282,63 @@ void setup()
 
 void loop()
 {
+
+ Serial.println("loop");
   if (testSerial.available() > 0) {
     degisken = testSerial.readString();
-    webSocket.sendTXT(globalNum, degisken);
-    int dgs = sizeof(degisken);
-   String dggs = String(dgs);
-    webSocket.sendTXT(globalNum, dggs);
-    yield();
-    if (degisken.substring(0,2) == "D6") {
-      testSerial.print("t0.txt=");
-      testSerial.print("\"");
-      testSerial.print("Wi-Fi Yeniden Baslatiliyor...");
-      testSerial.print("\"");
-      testSerial.write(0xff);
-      testSerial.write(0xff);
-      testSerial.write(0xff);
+    Serial.print("debug->degisken->");
+    Serial.println(degisken);
+    if (degisken.length() > 1) {
+      String sub = degisken.substring(0, 3);
+      Serial.print("debug->sub->");
+      Serial.println(sub);
+      if (sub.equals("D15")) {
+        //     Serial.print("$J=G53X0.0F500\n");
+      } else if ( sub.equals("D16")) {
+        //   Serial.print("D25\n");
+      } else if ( sub.equals("D17")) {
+        //Serial.print("$J=G53Y0.0F500\n");
+      } else if ( sub.equals("D18")) {
+        //    Serial.print("D25\n");
+      } else if ( sub.equals("D19")) {
+        //    Serial.print("$J=G53X200.0F500\n");
+      } else if ( sub.equals("D20")) {
+        //     Serial.print("D25\n");
+      } else if ( sub.equals("D21")) {
+        //   Serial.print("$J=G53Y200.0F500\n");
+      } else if ( sub.equals("D22")) {
+        //    Serial.print("D25\n");
+      } else {
+     //   webSocket.sendTXT(globalNum, degisken);
+      }
+        webSocket.sendTXT(globalNum, degisken);
 
-      wifiManager.resetSettings();
-      ESP.restart();
+
+
+
+      //  webSocket.sendTXT(globalNum, degisken);
+      //  int dgs = sizeof(degisken);
+      //  String dggs = String(dgs);
+      //  webSocket.sendTXT(globalNum, dggs);
+
+      // uint8_t dataArray[degisken.length()];
+      // degisken.toCharArray(dataArray, degisken.length());
+      // Serial.write((const char *) (dataArray), (degisken.length()));
+
+      yield();
+      if (degisken.substring(0, 2) == "D6") {
+        testSerial.print("t0.txt=");
+        testSerial.print("\"");
+        testSerial.print("Wi-Fi Yeniden Baslatiliyor...");
+        testSerial.print("\"");
+        testSerial.write(0xff);
+        testSerial.write(0xff);
+        testSerial.write(0xff);
+        wifiManager.resetSettings();
+        ESP.restart();
+      }
+
+
     }
   }
   ArduinoOTA.handle();
