@@ -33,6 +33,7 @@ bool socketConnected = false;
 SoftwareSerial testSerial;
 
 
+
 class SerialTerminal {
   public:
     void setup() {
@@ -279,19 +280,15 @@ void setup()
 
 }
 
+void GetDataTestSerial(){
 
-void loop()
-{
-
- Serial.println("loop");
-  if (testSerial.available() > 0) {
+   if (testSerial.available() > 0) {
     degisken = testSerial.readString();
-    Serial.print("debug->degisken->");
-    Serial.println(degisken);
+//    Serial.println(degisken);
     if (degisken.length() > 1) {
       String sub = degisken.substring(0, 3);
-      Serial.print("debug->sub->");
-      Serial.println(sub);
+//      Serial.print("debug->sub->");
+//      Serial.println(sub);
       if (sub.equals("D15")) {
         //     Serial.print("$J=G53X0.0F500\n");
       } else if ( sub.equals("D16")) {
@@ -341,6 +338,13 @@ void loop()
 
     }
   }
+}
+
+void loop()
+{
+  GetDataTestSerial();
+ //Serial.println("loop");
+ 
   ArduinoOTA.handle();
   term.loop();
   webSocket.loop();
