@@ -1,5 +1,3 @@
-// Credits: Based on LaserWeb codebase, https://github.com/LaserWeb/LaserWeb3-ESP8266
-
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WebSocketsServer.h>    //https://github.com/Links2004/arduinoWebSockets/issues/61
@@ -21,7 +19,7 @@ const char* update_path = "/firmware";
 const char* update_username = "admin";
 const char* update_password = "admin";
 String degisken ;
-int wrt_ip = 0 ;
+int wrt_ip = 0 , degisken1 , pointer_flag = 0 ;
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 
@@ -280,71 +278,68 @@ void setup()
 
 }
 
-void GetDataTestSerial(){
 
-   if (testSerial.available() > 0) {
-    degisken = testSerial.readString();
-//    Serial.println(degisken);
-    if (degisken.length() > 1) {
-      String sub = degisken.substring(0, 3);
-//      Serial.print("debug->sub->");
-//      Serial.println(sub);
-      if (sub.equals("D15")) {
-        //     Serial.print("$J=G53X0.0F500\n");
-      } else if ( sub.equals("D16")) {
-        //   Serial.print("D25\n");
-      } else if ( sub.equals("D17")) {
-        //Serial.print("$J=G53Y0.0F500\n");
-      } else if ( sub.equals("D18")) {
-        //    Serial.print("D25\n");
-      } else if ( sub.equals("D19")) {
-        //    Serial.print("$J=G53X200.0F500\n");
-      } else if ( sub.equals("D20")) {
-        //     Serial.print("D25\n");
-      } else if ( sub.equals("D21")) {
-        //   Serial.print("$J=G53Y200.0F500\n");
-      } else if ( sub.equals("D22")) {
-        //    Serial.print("D25\n");
-      } else {
-     //   webSocket.sendTXT(globalNum, degisken);
-      }
-        webSocket.sendTXT(globalNum, degisken);
-
-
-
-
-      //  webSocket.sendTXT(globalNum, degisken);
-      //  int dgs = sizeof(degisken);
-      //  String dggs = String(dgs);
-      //  webSocket.sendTXT(globalNum, dggs);
-
-      // uint8_t dataArray[degisken.length()];
-      // degisken.toCharArray(dataArray, degisken.length());
-      // Serial.write((const char *) (dataArray), (degisken.length()));
-
-      yield();
-      if (degisken.substring(0, 2) == "D6") {
-        testSerial.print("t0.txt=");
-        testSerial.print("\"");
-        testSerial.print("Wi-Fi Yeniden Baslatiliyor...");
-        testSerial.print("\"");
-        testSerial.write(0xff);
-        testSerial.write(0xff);
-        testSerial.write(0xff);
-        wifiManager.resetSettings();
-        ESP.restart();
-      }
-
-
-    }
-  }
-}
 
 void loop()
 {
-  GetDataTestSerial();
- //Serial.println("loop");
- 
+  if (testSerial.available() > 0) {
+    degisken1 = testSerial.read();
+
+    if (degisken1 == 49) { //home
+      Serial.println("$J=G90X0Y0F2000");
+    } else if (degisken1 == 50) { //up
+      Serial.println("$J=G53Y450.0F2000");
+    } else if (degisken1 == 51) { //down
+      Serial.println("$J=G53Y0.0F2000");
+    } else if (degisken1 == 52) { //right
+      Serial.println("$J=G53X4500.0F2000");
+    } else if (degisken1 == 53) { //left
+      Serial.println("$J=G53X0.0F2000");
+    } else if (degisken1 == 54) { //zeroing
+      Serial.println("G92 X0 Y0 Z0");
+    } else if (degisken1 == 55) { //pointer
+      if (pointer_flag == 0) {
+        Serial.println("M3 S30.000");
+        Serial.println("G1 F1000");
+        pointer_flag = 1;
+      } else {
+        Serial.println("M5 S0");
+        Serial.println("G0");
+        pointer_flag = 0;
+      }
+    } else if (degisken1 == 56) { //dc up
+      Serial.println("D990");
+    } else if (degisken1 == 57) { //dc down
+      Serial.println("D-990");
+    } else if (degisken1 == 64) { //all close
+      Serial.write(0x85);
+      Serial.println();
+    } else if (degisken1 == 65) {//reset wi-fi
+
+
+      testSerial.print("t0.txt=");
+      testSerial.print("\"");
+      testSerial.print("Wi-Fi Sifirlaniyor...");
+      testSerial.print("\"");
+      testSerial.write(0xff);
+      testSerial.write(0xff);
+      testSerial.write(0xff);
+
+      wifiManager.resetSettings();
+      ESP.restart();
+    } else if (degisken1 == 66) {
+      webSocket.sendTXT(globalNum, "D9\n");
+    } else if (degisken1 == 67) {
+      webSocket.sendTXT(globalNum, "D5\n");
+    } else if (degisken1 == 70) {
+      webSocket.sendTXT(globalNum, "D7\n");
+    } else if (degisken1 == 69) {
+      webSocket.sendTXT(globalNum, "D4\n");
+    } else if (degisken1 == 68) {
+      webSocket.sendTXT(globalNum, "D3\n");
+    }
+
+  }
   ArduinoOTA.handle();
   term.loop();
   webSocket.loop();
