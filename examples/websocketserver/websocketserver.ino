@@ -6,10 +6,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiManager.h>         //https://github.com/tzapu/WiFiManager
-#include <SoftwareSerial.h>
-#include <ESP8266mDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
+
 
 // Transparent Serial Bridge code from Marcus https://github.com/Links2004/arduinoWebSockets/issues/61
 
@@ -18,157 +15,138 @@ ESP8266HTTPUpdateServer httpUpdater;
 const char* update_path = "/firmware";
 const char* update_username = "admin";
 const char* update_password = "admin";
-String degisken ;
-int wrt_ip = 0 , degisken1 , pointer_flag = 0 ;
+
+
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 
 WiFiManager wifiManager;
-
+int RESET_PIN = 0; // = GPIO0 on nodeMCU
 bool socketConnected = false;
 
 #define SEND_SERIAL_TIME (50)
-SoftwareSerial testSerial;
-
-
 
 class SerialTerminal {
-  public:
-    void setup() {
-      _lastRX = 0;
-      resetBuffer();
-      Serial.begin(115200);
-    }
-
-    void loop() {
-      ArduinoOTA.handle();
-      unsigned long t = millis();
-      bool forceSend = false;
-
-      size_t len = (_bufferWritePtr - &_buffer[0]);
-      int free = (sizeof(_buffer) - len);
-
-      int available = Serial.available();
-      if (available > 0 && free > 0) {
-        int readBytes = available;
-        if (readBytes > free) {
-          readBytes = free;
+    public:
+        void setup() {
+            _lastRX = 0;
+            resetBuffer();
+         
         }
-        readBytes = Serial.readBytes(_bufferWritePtr, readBytes);
-        _bufferWritePtr += readBytes;
-        _lastRX = t;
-      }
 
-      // check for data in buffer
-      len = (_bufferWritePtr - &_buffer[0]);
-      if (len >=  sizeof(_buffer)) {
-        forceSend = true;
-      }
-      if (len > (WEBSOCKETS_MAX_HEADER_SIZE + 1)) {
-        if (((t - _lastRX) > SEND_SERIAL_TIME) || forceSend) {
-          webSocket.broadcastTXT(&_buffer[0], (len - WEBSOCKETS_MAX_HEADER_SIZE), true);
-          resetBuffer();
+        void loop() {
+            unsigned long t = millis();
+            bool forceSend = false;
+
+            size_t len = (_bufferWritePtr - &_buffer[0]);
+            int free = (sizeof(_buffer) - len);
+
+            int available = Serial.available();
+            if(available > 0 && free > 0) {
+                int readBytes = available;
+                if(readBytes > free) {
+                    readBytes = free;
+                }
+                readBytes = Serial.readBytes(_bufferWritePtr, readBytes);
+                _bufferWritePtr += readBytes;
+                _lastRX = t;
+            }
+
+            // check for data in buffer
+            len = (_bufferWritePtr - &_buffer[0]);
+            if(len >=  sizeof(_buffer)) {
+                forceSend = true;
+            }
+            if(len > (WEBSOCKETS_MAX_HEADER_SIZE + 1)) {
+                if(((t - _lastRX) > SEND_SERIAL_TIME) || forceSend) {
+                    webSocket.broadcastTXT(&_buffer[0], (len - WEBSOCKETS_MAX_HEADER_SIZE), true);
+                    resetBuffer();
+                }
+            }
         }
-      }
-    }
 
 
-  protected:
-    uint8_t _buffer[1460];
-    uint8_t * _bufferWritePtr;
-    unsigned long _lastRX;
+    protected:
+        uint8_t _buffer[1460];
+        uint8_t * _bufferWritePtr;
+        unsigned long _lastRX;
 
-    void resetBuffer() {
-      // offset for adding Websocket header
-      _bufferWritePtr = &_buffer[WEBSOCKETS_MAX_HEADER_SIZE];
-      // addChar('T');
-    }
+        void resetBuffer() {
+            // offset for adding Websocket header
+            _bufferWritePtr = &_buffer[WEBSOCKETS_MAX_HEADER_SIZE];
+            // addChar('T');
+        }
 
-    inline void addChar(char c) {
-      *_bufferWritePtr = (uint8_t) c; // message type for Webinterface
-      _bufferWritePtr++;
-    }
+        inline void addChar(char c) {
+            *_bufferWritePtr = (uint8_t) c; // message type for Webinterface
+            _bufferWritePtr++;
+        }
 };
 
 SerialTerminal term;
-uint8_t globalNum = 0;
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght)
-{
 
-  globalNum = num;
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) 
+{
+ Serial.begin(115200);
   if (type == WStype_DISCONNECTED)
   {
-    testSerial.print("t0.txt=");
-    testSerial.print("\"");
-    testSerial.print("Bağlantı Koptu");
-    testSerial.print("\"");
-    testSerial.write(0xff);
-    testSerial.write(0xff);
-    testSerial.write(0xff);
     socketConnected = false;
   }
   else if (type == WStype_CONNECTED)
   {
     socketConnected = true;
     webSocket.sendTXT(num, "Connected\n");
-    testSerial.print("t0.txt=");
-    testSerial.print("\"");
-    testSerial.print("HAZIR");
-    testSerial.print("\"");
-    testSerial.write(0xff);
-    testSerial.write(0xff);
-    testSerial.write(0xff);
-
-
-
+    Serial.print("^Aga Baglandi^\r\n");
   }
   else if (type == WStype_TEXT)
   {
-    if (lenght > 0)
+    if(lenght > 0)
     {
       String command = String((const char *)payload);
-      //  SendFormat(num, "Nodemcu gelen veri:    %s\n", payload);
       command.toUpperCase();
-      if (command == "WIFIRESET\n")
-      {
-        webSocket.sendTXT(num, "ok\n");
-        webSocket.sendTXT(num, "Resetting WiFi settings!\n");
-        delay(500);
+            if (command == "WIFIRESET\n")
+            {
+              webSocket.sendTXT(num, "ok\n");  
+                webSocket.sendTXT(num, "Resetting WiFi settings!\n");
+                delay(500);   
         wifiManager.resetSettings();
-        delay(100);
-        ESP.restart();
-      }
-      else if (command == "WIFISTATUS\n")
-      {
-        webSocket.sendTXT(num, "ok\n");
-
-        char buffer[100];      //declare array
-        IPAddress local = WiFi.localIP();
-        IPAddress gatew = WiFi.gatewayIP();
-
-        SendFormat(num, "Connected to:    %s\n", WiFi.SSID().c_str());
+                delay(100);
+                ESP.restart();
+            }
+            else if (command == "WIFISTATUS\n")
+            {
+        webSocket.sendTXT(num, "ok\n");  
+              
+              char buffer[100];      //declare array
+                IPAddress local = WiFi.localIP();
+                IPAddress gatew = WiFi.gatewayIP();
+              
+                SendFormat(num, "Connected to:    %s\n", WiFi.SSID().c_str());
         SendFormat(num, "Signal strength: %ddBm\n", WiFi.RSSI());
-        SendFormat(num, "Local IP:        %d.%d.%d.%d\n", local[0], local[1], local[2], local[3]);
-        SendFormat(num, "Gateway IP:      %d.%d.%d.%d\n", gatew[0], gatew[1], gatew[2], gatew[3]);
-      }
-      else if (command == "CHIPSTATUS\n")
-      {
-        webSocket.sendTXT(num, "ok\n");
+                SendFormat(num, "Local IP:        %d.%d.%d.%d\n", local[0], local[1], local[2], local[3]);
+                SendFormat(num, "Gateway IP:      %d.%d.%d.%d\n", gatew[0], gatew[1], gatew[2], gatew[3]);
+                Serial.print("^IP :");
+                Serial.print(WiFi.localIP());
+                Serial.print("^\r\n");
+            }
+            else if (command == "CHIPSTATUS\n")
+            {
+        webSocket.sendTXT(num, "ok\n"); 
         uint32_t realSize = ESP.getFlashChipRealSize();
         uint32_t ideSize = ESP.getFlashChipSize();
         FlashMode_t ideMode = ESP.getFlashChipMode();
 
-        SendFormat(num, "CPU Freq:        %uMHz\n", ESP.getCpuFreqMHz());
-        SendFormat(num, "Flash speed:     %uMHz\n", ESP.getFlashChipSpeed() / 1000000);
-        SendFormat(num, "Flash real size: %uKB\n", realSize / 1024);
-        SendFormat(num, "Flash ide  size: %uKB\n", ideSize / 1024);
-        SendFormat(num, "Flash ide  mode: %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
-        SendFormat(num, "Flash ID:        %08X\n", ESP.getFlashChipId());
-      }
-      else
-      {
-        Serial.write((const char *) (payload), (lenght));
-      }
+        SendFormat(num,"CPU Freq:        %uMHz\n", ESP.getCpuFreqMHz());
+        SendFormat(num,"Flash speed:     %uMHz\n", ESP.getFlashChipSpeed()/1000000);
+        SendFormat(num,"Flash real size: %uKB\n", realSize/1024);
+        SendFormat(num,"Flash ide  size: %uKB\n", ideSize/1024);
+        SendFormat(num,"Flash ide  mode: %s\n", (ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
+        SendFormat(num,"Flash ID:        %08X\n", ESP.getFlashChipId());
+            }
+            else
+            {
+              Serial.write((const char *) (payload), (lenght));
+            }
     }
   }
 
@@ -181,167 +159,32 @@ void SendFormat (uint8_t num, char * format, ...)
   va_start (args, format);
   vsnprintf (buffer, 100, format, args);
   va_end (args);
-  webSocket.sendTXT(num, buffer);
+  webSocket.sendTXT(num, buffer); 
 }
 
 void setup()
 {
-  delay(5000); //BOOT WAIT
   Serial.begin(115200);
+    delay(5000); //BOOT WAIT
+    pinMode(RESET_PIN, INPUT_PULLUP);
+    Serial.print("^Ag Baslatılıyor^\r\n");
+    wifiManager.autoConnect("ESP8266");
 
-  testSerial.begin(9600, SWSERIAL_8N1, 2, 0, false, 95, 11);
+    webSocket.begin();
+    webSocket.onEvent(webSocketEvent);
 
-  Serial.print("baud=9600");
-  testSerial.write(0xff);
-  testSerial.write(0xff);
-  testSerial.write(0xff);
+    httpUpdater.setup(&httpServer, update_path, update_username, update_password);
+    httpServer.begin();
 
-  Serial.println("start");
-  testSerial.print("t0.txt=");
-  testSerial.print("\"");
-  testSerial.print( WiFi.SSID());
-  testSerial.print("Baglaniyor...");
-  testSerial.print("\"");
-  testSerial.write(0xff);
-  testSerial.write(0xff);
-  testSerial.write(0xff);
+    term.setup();
 
-  //     wifiManager.resetSettings();
-  wifiManager.setDebugOutput(true);
-  Serial.println("start");
-  if (wifiManager.autoConnect("ESP8266")) {
-
-    Serial.println(WiFi.SSID());
-    //Serial.println( "Signal strength: %ddBm\n", WiFi.RSSI());
-    //      Serial.println( "Local IP:        %d.%d.%d.%d\n", local[0], local[1], local[2], local[3]);
-    //      Serial.println( "Gateway IP:      %d.%d.%d.%d\n", gatew[0], gatew[1], gatew[2], gatew[3]);
-  }
-  Serial.println(WiFi.SSID());
-
-  webSocket.begin();
-  webSocket.onEvent(webSocketEvent);
-
-  httpUpdater.setup(&httpServer, update_path, update_username, update_password);
-  httpServer.begin();
-
-  term.setup();
-
-  WiFi.setSleepMode(WIFI_NONE_SLEEP); // disable WiFi sleep for more performance
-
-  ArduinoOTA.onStart([]() {
-    String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
-      type = "sketch";
-    } else { // U_FS
-      type = "filesystem";
-    }
-
-    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-    Serial.println("Start updating " + type);
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) {
-      Serial.println("Auth Failed");
-    } else if (error == OTA_BEGIN_ERROR) {
-      Serial.println("Begin Failed");
-    } else if (error == OTA_CONNECT_ERROR) {
-      Serial.println("Connect Failed");
-    } else if (error == OTA_RECEIVE_ERROR) {
-      Serial.println("Receive Failed");
-    } else if (error == OTA_END_ERROR) {
-      Serial.println("End Failed");
-    }
-  });
-  ArduinoOTA.begin();
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-
-
-  testSerial.print("t0.txt=");
-  testSerial.print("\"");
-  testSerial.print("IP Adresi: ");
-  testSerial.print(WiFi.localIP());
-  testSerial.print("\"");
-  testSerial.write(0xff);
-  testSerial.write(0xff);
-  testSerial.write(0xff);
-
-
+    WiFi.setSleepMode(WIFI_NONE_SLEEP); // disable WiFi sleep for more performance
 }
-
 
 
 void loop()
 {
-  if (testSerial.available() > 0) {
-    degisken1 = testSerial.read();
-
-    if (degisken1 == 49) { //home
-      Serial.println("$J=G90X0Y0F2000");
-    } else if (degisken1 == 50) { //up
-      Serial.println("$J=G53Y450.0F2000");
-    } else if (degisken1 == 51) { //down
-      Serial.println("$J=G53Y0.0F2000");
-    } else if (degisken1 == 52) { //right
-      Serial.println("$J=G53X4500.0F2000");
-    } else if (degisken1 == 53) { //left
-      Serial.println("$J=G53X0.0F2000");
-    } else if (degisken1 == 54) { //zeroing
-      Serial.println("G92 X0 Y0 Z0");
-    } else if (degisken1 == 55) { //pointer
-      if (pointer_flag == 0) {
-        Serial.println("M3 S30.000");
-        Serial.println("G1 F1000");
-        pointer_flag = 1;
-      } else {
-        Serial.println("M5 S0");
-        Serial.println("G0");
-        pointer_flag = 0;
-      }
-    } else if (degisken1 == 56) { //dc up
-      Serial.println("D990");
-    } else if (degisken1 == 57) { //dc down
-      Serial.println("D-990");
-    } else if (degisken1 == 64) { //all close
-      Serial.write(0x85);
-      Serial.println();
-    } else if (degisken1 == 65) {//reset wi-fi
-
-
-      testSerial.print("t0.txt=");
-      testSerial.print("\"");
-      testSerial.print("Wi-Fi Sifirlaniyor...");
-      testSerial.print("\"");
-      testSerial.write(0xff);
-      testSerial.write(0xff);
-      testSerial.write(0xff);
-
-      wifiManager.resetSettings();
-      ESP.restart();
-    } else if (degisken1 == 66) {
-      webSocket.sendTXT(globalNum, "D9\n");
-    } else if (degisken1 == 67) {
-      webSocket.sendTXT(globalNum, "D5\n");
-    } else if (degisken1 == 70) {
-      webSocket.sendTXT(globalNum, "D7\n");
-    } else if (degisken1 == 69) {
-      webSocket.sendTXT(globalNum, "D4\n");
-    } else if (degisken1 == 68) {
-      webSocket.sendTXT(globalNum, "D3\n");
-    }
-
-  }
-  ArduinoOTA.handle();
-  term.loop();
-  webSocket.loop();
-  httpServer.handleClient();
+    term.loop();
+    webSocket.loop();
+    httpServer.handleClient();
 }
