@@ -1,4 +1,4 @@
-#include <Arduino.h>
+  #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <WebSocketsServer.h>    //https://github.com/Links2004/arduinoWebSockets/issues/61
 #include <Hash.h>
@@ -96,7 +96,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
   {
     socketConnected = true;
     webSocket.sendTXT(num, "Connected\n");
-    Serial.print("^Aga Baglandi^\r\n");
   }
   else if (type == WStype_TEXT)
   {
@@ -125,9 +124,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
         SendFormat(num, "Signal strength: %ddBm\n", WiFi.RSSI());
                 SendFormat(num, "Local IP:        %d.%d.%d.%d\n", local[0], local[1], local[2], local[3]);
                 SendFormat(num, "Gateway IP:      %d.%d.%d.%d\n", gatew[0], gatew[1], gatew[2], gatew[3]);
-                Serial.print("^IP :");
-                Serial.print(WiFi.localIP());
-                Serial.print("^\r\n");
+
             }
             else if (command == "CHIPSTATUS\n")
             {
@@ -160,15 +157,14 @@ void SendFormat (uint8_t num, char * format, ...)
   vsnprintf (buffer, 100, format, args);
   va_end (args);
   webSocket.sendTXT(num, buffer); 
-}
+} 
 
 void setup()
 {
   Serial.begin(115200);
     delay(5000); //BOOT WAIT
     pinMode(RESET_PIN, INPUT_PULLUP);
-    Serial.print("^Ag Baslatılıyor^\r\n");
-    wifiManager.autoConnect("ESP8266");
+    wifiManager.autoConnect("Rx Lazer");
 
     webSocket.begin();
     webSocket.onEvent(webSocketEvent);

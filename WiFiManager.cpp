@@ -131,6 +131,10 @@ void WiFiManager::setupConfigPortal()
 
   DEBUG_WM(F("Configuring access point... "));
   DEBUG_WM(_apName);
+
+  Serial.println("^Ag Kuruluyor^");
+  Serial.println("^Ag Kuruluyor^");
+
   if (_apPassword != NULL)
   {
     if (strlen(_apPassword) < 8 || strlen(_apPassword) > 63)
@@ -159,6 +163,12 @@ void WiFiManager::setupConfigPortal()
   }
 
   delay(500); // Without delay I've seen the IP address blank
+  Serial.print("^Ip Adresi=");
+  Serial.print(WiFi.softAPIP());
+  Serial.println("^");
+  Serial.print("^Ip Adresi=");
+  Serial.print(WiFi.softAPIP());
+  Serial.println("^");
   DEBUG_WM(F("AP IP address: "));
   DEBUG_WM(WiFi.softAPIP());
 
@@ -189,6 +199,8 @@ boolean WiFiManager::autoConnect()
 boolean WiFiManager::autoConnect(char const *apName, char const *apPassword)
 {
   DEBUG_WM(F(""));
+  Serial.println("^Ag baslatiliyor^");
+  Serial.println("^Ag baslatiliyor^");
   DEBUG_WM(F("AutoConnect"));
 
   // read eeprom for ssid and pass
@@ -202,6 +214,15 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword)
   {
     DEBUG_WM(F("IP Address:"));
     DEBUG_WM(WiFi.localIP());
+
+    Serial.print("^Ip adresi=^");
+    Serial.print(WiFi.localIP());
+    Serial.println("^");
+    
+    Serial.print("^Ip adresi=^");
+    Serial.print(WiFi.localIP());
+    Serial.println("^");
+
     //connected
     return true;
   }
@@ -373,10 +394,13 @@ int WiFiManager::connectWifi(String ssid, String pass)
   }
   else
   {
-    if (WiFi.SSID() != "")
+    if (WiFi.SSID() != "")//eepromda wifi ismi ve şifre datası olduğu zaman.
     {
+
       DEBUG_WM(F("Using last saved values, should be faster"));
       //trying to fix connection in progress hanging
+        Serial.println("^Baglaniliyor^");
+        Serial.println("^Baglaniliyor^");
       ETS_UART_INTR_DISABLE();
       wifi_station_disconnect();
       ETS_UART_INTR_ENABLE();
@@ -384,7 +408,7 @@ int WiFiManager::connectWifi(String ssid, String pass)
     }
     else
     {
-      DEBUG_WM(F("No saved credentials"));
+      DEBUG_WM(F("No saved credentials")); // eepromda wifi ismi ve şifre datası olmadığı zaman.
     }
   }
 
