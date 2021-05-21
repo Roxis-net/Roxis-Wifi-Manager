@@ -133,7 +133,7 @@ void WiFiManager::setupConfigPortal()
   DEBUG_WM(_apName);
 
   Serial.println("^Ag Kuruluyor^");
-  Serial.println("^Ag Kuruluyor^");
+  
 
   if (_apPassword != NULL)
   {
@@ -166,7 +166,7 @@ void WiFiManager::setupConfigPortal()
   Serial.print("^Ip Adresi=");
   Serial.print(WiFi.softAPIP());
   Serial.println("^");
-  Serial.print("^Ip Adresi=");
+   Serial.print("^Ip Adresi=");
   Serial.print(WiFi.softAPIP());
   Serial.println("^");
   DEBUG_WM(F("AP IP address: "));
@@ -200,7 +200,7 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword)
 {
   DEBUG_WM(F(""));
   Serial.println("^Ag baslatiliyor^");
-  Serial.println("^Ag baslatiliyor^");
+ 
   DEBUG_WM(F("AutoConnect"));
 
   // read eeprom for ssid and pass
@@ -215,13 +215,7 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword)
     DEBUG_WM(F("IP Address:"));
     DEBUG_WM(WiFi.localIP());
 
-    Serial.print("^Ip adresi=");
-    Serial.print(WiFi.localIP());
-    Serial.println("^");
-    
-    Serial.print("^Ip adresi=");
-    Serial.print(WiFi.localIP());
-    Serial.println("^");
+
 
     //connected
     return true;
@@ -399,7 +393,6 @@ int WiFiManager::connectWifi(String ssid, String pass)
 
       DEBUG_WM(F("Using last saved values, should be faster"));
       //trying to fix connection in progress hanging
-        Serial.println("^Baglaniliyor^");
         Serial.println("^Baglaniliyor^");
       ETS_UART_INTR_DISABLE();
       wifi_station_disconnect();
@@ -950,8 +943,8 @@ void WiFiManager::DEBUG_WM(Generic text)
 {
   if (_debug)
   {
-    Serial.print("*WM: ");
-    Serial.println(text);
+    /*Serial.print("*WM: ");
+    Serial.println(text);*/
   }
 }
 
