@@ -215,11 +215,11 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword)
     DEBUG_WM(F("IP Address:"));
     DEBUG_WM(WiFi.localIP());
 
-    Serial.print("^Ip adresi=^");
+    Serial.print("^Ip adresi=");
     Serial.print(WiFi.localIP());
     Serial.println("^");
     
-    Serial.print("^Ip adresi=^");
+    Serial.print("^Ip adresi=");
     Serial.print(WiFi.localIP());
     Serial.println("^");
 
