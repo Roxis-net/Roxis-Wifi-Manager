@@ -166,11 +166,12 @@ void WiFiManager::setupConfigPortal()
  /* Serial.print("^Ip Adresi=");
   Serial.print(WiFi.softAPIP());
   Serial.println("^");*/
-  Serial.print("^Ip Adresi=");
+    DEBUG_WM(F("AP IP address: "));
+  DEBUG_WM(WiFi.softAPIP());
+  Serial.print("^Ip Adresi1=");
   Serial.print(WiFi.softAPIP());
   Serial.println("^");
-  DEBUG_WM(F("AP IP address: "));
-  DEBUG_WM(WiFi.softAPIP());
+
 
   /* Setup the DNS server redirecting all the domains to the apIP */
   dnsServer->setErrorReplyCode(DNSReplyCode::NoError);
@@ -219,9 +220,7 @@ boolean WiFiManager::autoConnect(char const *apName, char const *apPassword)
     Serial.print(WiFi.localIP());
     Serial.println("^");*/
     
-    Serial.print("^Ip adresi=");
-    Serial.print(WiFi.localIP());
-    Serial.println("^");
+
 
     //connected
     return true;
