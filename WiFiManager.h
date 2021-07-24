@@ -180,7 +180,7 @@ private:
   String toStringIp(IPAddress ip);
 
   boolean connect;
-  boolean _debug = true;
+  boolean _debug = false;
 
   void (*_apcallback)(WiFiManager *) = NULL;
   void (*_savecallback)(void) = NULL;

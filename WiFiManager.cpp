@@ -950,8 +950,8 @@ void WiFiManager::DEBUG_WM(Generic text)
 {
   if (_debug)
   {
-    Serial.print("*WM: ");
-    Serial.println(text);
+   /* Serial.print("*WM: ");
+    Serial.println(text);*/
   }
 }
 
